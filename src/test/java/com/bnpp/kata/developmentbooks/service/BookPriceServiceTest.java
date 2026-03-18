@@ -103,18 +103,42 @@ public class BookPriceServiceTest {
         bookItemsList = List.of(new BookItems("Clean code",2),
                 new BookItems("The Clean Coder",3));
         double price = bookPriceService.calculateBookPrice(bookItemsList);
-        assertEquals(245.0,price);
+        assertEquals(240.0,price);
     }
 
     @Test
-    @DisplayName("should return total price for three Books with two extra copy ")
+    @DisplayName("should return total price for three books with two extra copy ")
     void calculatethreeBooksTwoExtraCopyDiscountsUniqueOnly() {
         bookItemsList = List.of(new BookItems("Clean code", 2),
                 new BookItems("The Clean Coder", 2),
                 new BookItems("Clean Architecture", 1));
 
         double price = bookPriceService.calculateBookPrice(bookItemsList);
-        assertEquals(235.0, price);
+        assertEquals(230.0, price);
+    }
+
+    @Test
+    @DisplayName("should return best price for four books with two extra copy")
+    void calculateFourBooksTwoExtraCopyDiscountsUniqueOnly() {
+        bookItemsList = List.of(new BookItems("Clean code", 2),
+                new BookItems("The Clean Coder", 2),
+                new BookItems("Clean Architecture", 1),
+                new BookItems("Test Driven Development by Example", 1));
+
+        double price = bookPriceService.calculateBookPrice(bookItemsList);
+        assertEquals(255.0, price);
+    }
+
+    @Test
+    @DisplayName("should return best price for given five books combination")
+    public void calculatePossibleCombination() {
+        bookItemsList = List.of(new BookItems("Clean code", 2),
+                new BookItems("The Clean Coder", 2),
+                new BookItems("Clean Architecture", 2),
+                new BookItems("Test Driven Development by Example", 1),
+                new BookItems("Working Effectively With Legacy Code",1));
+        double price = bookPriceService.calculateBookPrice(bookItemsList);
+        assertEquals(320.0, price);
     }
 
 

@@ -1,5 +1,6 @@
 package com.bnpp.kata.developmentbooks.service;
 
+import com.bnpp.kata.developmentbooks.exception.InvalidBookException;
 import com.bnpp.kata.developmentbooks.model.BookItems;
 import com.bnpp.kata.developmentbooks.model.OrderResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +12,7 @@ import java.util.List;
 
 import static com.bnpp.kata.developmentbooks.constants.Constants.ZERO_DOUBLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DevelopmentBooksServiceTest {
 
@@ -41,11 +43,11 @@ public class DevelopmentBooksServiceTest {
     }
 
     @Test
-    @DisplayName("should return zero when quantity is zero")
+    @DisplayName("should throw invalid book exception when quantity is zero")
     public void calculateSingleBookWithZeroQuantity(){
         bookItemsList = List.of(new BookItems("Clean code",0));
-        OrderResponse orderResponse= developmentBooksService.calculateBookPrice(bookItemsList);
-        assertEquals(ZERO_DOUBLE, orderResponse.getDiscountedPrice());
+        assertThrows(InvalidBookException.class,
+                () -> developmentBooksService.calculateBookPrice(bookItemsList));
     }
 
     @Test
@@ -150,6 +152,13 @@ public class DevelopmentBooksServiceTest {
                 new BookItems("Working Effectively With Legacy Code",1));
         OrderResponse reponse = developmentBooksService.calculateBookPrice(bookItemsList);
         assertEquals(400, reponse.getTotalPrice());
+    }
+
+    @Test
+    @DisplayName("should throw invalid book exception")
+    void invalidQuantityThrowsException() {
+        assertThrows(InvalidBookException.class,
+                () -> developmentBooksService.calculateBookPrice(List.of(new BookItems("A", -1))));
     }
 
 

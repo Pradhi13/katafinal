@@ -18,7 +18,7 @@ public class BookPriceServiceTest {
     @Test
     @DisplayName("should return base price for a single book without discount")
     public void calculateSingleBookPrice(){
-        double price = bookPriceService.calculateBookPrice("Clean Code");
-        assertEquals(50.0,price);
+        double price = bookPriceService.calculateBookPrice("Clean Code",2);
+        assertEquals(100.0,price);
     }
 }

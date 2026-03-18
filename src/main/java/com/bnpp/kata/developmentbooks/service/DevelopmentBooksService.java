@@ -13,7 +13,7 @@ import java.util.stream.IntStream;
 import static com.bnpp.kata.developmentbooks.constants.Constants.*;
 
 @Service
-public class BookPriceService {
+public class DevelopmentBooksService {
 
     public double calculateBookPrice(@NotEmpty(message = "Book list cannot be empty")
                                      List<@Valid BookItems> bookItemsList) {

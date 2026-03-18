@@ -1,6 +1,7 @@
 package com.bnpp.kata.developmentbooks.controller;
 
 import com.bnpp.kata.developmentbooks.constants.BookType;
+import com.bnpp.kata.developmentbooks.exception.InvalidBookException;
 import com.bnpp.kata.developmentbooks.model.BookItems;
 import com.bnpp.kata.developmentbooks.model.Books;
 import com.bnpp.kata.developmentbooks.model.GroupDetails;
@@ -22,6 +23,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -98,6 +101,32 @@ public class DevelopmentBooksControllerTest {
         mockMvc.perform(post("/api/v1/books/calculatePrice")
                         .content("{\"books\":[1,2,3]}"))
                 .andExpect(status().isUnsupportedMediaType());
+    }
+
+    @Test
+    void handleInvalidBasket_InvalidBookException_Returns400() throws Exception {
+        doThrow(new InvalidBookException("Invalid quantity"))
+                .when(developmentBooksService).calculateBookPrice(any());
+
+        mockMvc.perform(post("/api/v1/books/calculatePrice")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"books\":[{\"title\":\"Clean code\",\"quantity\":0}]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_BASKET"))
+                .andExpect(jsonPath("$.message").value("Invalid quantity"));
+    }
+
+    @Test
+    void handleRuntime_ServiceError_Returns500() throws Exception {
+        doThrow(new RuntimeException("Service failed"))
+                .when(developmentBooksService).calculateBookPrice(any());
+
+        mockMvc.perform(post("/api/v1/books/calculatePrice")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"books\":[{\"title\":\"Clean Code\",\"quantity\":1}]}"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
+                .andExpect(jsonPath("$.message").value("Pricing calculation failed"));
     }
 
     private static OrderResponse getOrderResponse() {

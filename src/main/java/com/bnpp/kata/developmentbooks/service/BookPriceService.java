@@ -1,9 +1,11 @@
 package com.bnpp.kata.developmentbooks.service;
 
-import com.bnpp.kata.developmentbooks.constants.Constants;
+import com.bnpp.kata.developmentbooks.constants.BookType;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.bnpp.kata.developmentbooks.constants.Constants.*;
 
@@ -18,6 +20,6 @@ public class BookPriceService {
     }
 
     public List<String> getListOfBooks() {
-        return Constants.BOOK_LIST;
+        return Arrays.stream(BookType.values()).map(BookType::getTitle).collect(Collectors.toList());
     }
 }

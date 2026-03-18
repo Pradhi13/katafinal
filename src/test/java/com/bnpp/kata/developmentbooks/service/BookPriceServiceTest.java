@@ -53,7 +53,7 @@ public class BookPriceServiceTest {
     public void calculateTwoDifferentBooksPrice(){
         bookItemsList = List.of(new BookItems("Clean code",1),new BookItems("The Clean Coder", 1));
         double price = bookPriceService.calculateBookPrice(bookItemsList);
-        assertEquals(100.0,price);
+        assertEquals(95.0,price);
     }
 
     @Test
@@ -63,7 +63,7 @@ public class BookPriceServiceTest {
                 new BookItems("The Clean Coder",1),
                 new BookItems("Clean Architecture",1));
         double price = bookPriceService.calculateBookPrice(bookItemsList);
-        assertEquals(150.0,price);
+        assertEquals(135.0,price);
     }
 
     @Test
@@ -74,7 +74,7 @@ public class BookPriceServiceTest {
                 new BookItems("Clean Architecture",1),
                 new BookItems("Test Driven Development by Example", 1));
         double price = bookPriceService.calculateBookPrice(bookItemsList);
-        assertEquals(200.0,price);
+        assertEquals(160.0,price);
     }
 
     @Test
@@ -86,7 +86,7 @@ public class BookPriceServiceTest {
                 new BookItems("Test Driven Development by Example", 1),
                 new BookItems("Working Effectively With Legacy Code", 1));
         double price = bookPriceService.calculateBookPrice(bookItemsList);
-        assertEquals(250.0,price);
+        assertEquals(187.5,price);
     }
 
     @Test
@@ -98,13 +98,14 @@ public class BookPriceServiceTest {
     }
 
     @Test
-    @DisplayName("should return total price for multiple quantity of same book without discount")
-    public void calculateMultipleQuantityOfSameBookPrice(){
+    @DisplayName("should return total price for multiple quantity of different book with discount")
+    public void calculateMultipleQuantityOfDifferentBookPrice(){
         bookItemsList = List.of(new BookItems("Clean code",2),
                 new BookItems("The Clean Coder",3));
         double price = bookPriceService.calculateBookPrice(bookItemsList);
-        assertEquals(250.0,price);
+        assertEquals(245.0,price);
     }
+
 
 
 

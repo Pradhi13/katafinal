@@ -1,0 +1,132 @@
+openapi: 3.0.3
+info:
+  title: Developmentbooks
+  description: Developmentbooks - Get optimal discounts when buying multiple development books
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: http://localhost:8080/api/v1/books
+
+paths:
+  /calculatePrice:
+    post:
+      summary: Calculate optimal book discount price
+      operationId: calculateBookPriceApi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Books'
+      responses:
+        '200':
+          description: Order pricing with best groups
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    BookItems:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Clean Code"
+          minLength: 1
+        quantity:
+          type: integer
+          minimum: 1
+          example: 2
+      description: Book title and quantity
+
+    Books:
+      type: object
+      properties:
+        books:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookItems'
+          minItems: 1
+      example:
+        books:
+          - title: "Clean Code"
+            quantity: 2
+
+    GroupDetails:
+      type: object
+      properties:
+        books:
+          type: array
+          items:
+            type: string
+          example: ["Clean Code"]
+        groupSize:
+          type: integer
+          example: 1
+        discountPercentage:
+          type: number
+          format: double
+          example: 0.0
+        afterdiscountPrice:
+          type: number
+          format: double
+          example: 50.0
+      description: Discounted group details
+    OrderResponse:
+      type: object
+      properties:
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupDetails'
+        totalPrice:
+          type: number
+          format: double
+          example: 100.0
+        discountedPrice:
+          type: number
+          format: double
+          example: null
+      example:
+        groups: []
+        totalPrice: 100.0
+        discountedPrice: null
+    PriceResult:
+      type: object
+      properties:
+        price:
+          type: number
+          format: double
+          example: 80.0
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupDetails'
+      description: Final calculated price and group details
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "INVALID_BASKET"
+          description: Error code (VALIDATION_ERROR, INVALID_BASKET, INTERNAL_ERROR)
+        message:
+          type: string
+          example: "Quantity cannot be negative for 'Clean Code': -1"
+      description: Standardized error response

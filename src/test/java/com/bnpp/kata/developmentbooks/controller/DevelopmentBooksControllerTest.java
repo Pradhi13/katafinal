@@ -74,4 +74,23 @@ public class DevelopmentBooksControllerTest {
                 .andExpect(content().string("320.0"));
     }
 
+    @Test
+    @DisplayName("should return bad request for invalid json")
+    void shouldReturnBadRequestForInvalidJson() throws Exception {
+
+        mockMvc.perform(post("/api/v1/books/calculatePrice")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("invalid-json"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("should return unsupported media type when content type is missing")
+    void shouldReturnUnsupportedMediaTypeWhenContentTypeMissing() throws Exception {
+
+        mockMvc.perform(post("/api/v1/books/calculatePrice")
+                        .content("{\"books\":[1,2,3]}"))
+                .andExpect(status().isUnsupportedMediaType());
+    }
+
 }

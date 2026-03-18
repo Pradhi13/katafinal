@@ -88,4 +88,25 @@ public class BookPriceServiceTest {
         double price = bookPriceService.calculateBookPrice(bookItemsList);
         assertEquals(250.0,price);
     }
+
+    @Test
+    @DisplayName("should return total price for 2 quantity of same book without discount")
+    public void calculateTwoQuantityOfSameBookPrice(){
+        bookItemsList = List.of(new BookItems("Clean code",2));
+        double price = bookPriceService.calculateBookPrice(bookItemsList);
+        assertEquals(100.0,price);
+    }
+
+    @Test
+    @DisplayName("should return total price for multiple quantity of same book without discount")
+    public void calculateMultipleQuantityOfSameBookPrice(){
+        bookItemsList = List.of(new BookItems("Clean code",2),
+                new BookItems("The Clean Coder",3));
+        double price = bookPriceService.calculateBookPrice(bookItemsList);
+        assertEquals(250.0,price);
+    }
+
+
+
+
 }

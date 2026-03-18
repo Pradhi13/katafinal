@@ -43,7 +43,7 @@ public class DevelopmentBooksService {
                 .build();
     }
 
-    private PriceResult findBestPrice(int[] quantities, String[] titles, Map<String,PriceResult> cache) {
+    private PriceResult findBestPrice(final int[] quantities, final String[] titles, Map<String,PriceResult> cache) {
 
         String key = Arrays.toString(quantities);
 
@@ -72,7 +72,7 @@ public class DevelopmentBooksService {
         return bestResult;
     }
 
-    private PriceResult calculateGroupPrice(int size, int[] quantities, String[] titles, Map<String,PriceResult> cache) {
+    private PriceResult calculateGroupPrice(final int size, final int[] quantities, final String[] titles, Map<String,PriceResult> cache) {
 
         int[] tmpArray = Arrays.copyOf(quantities, quantities.length);
 

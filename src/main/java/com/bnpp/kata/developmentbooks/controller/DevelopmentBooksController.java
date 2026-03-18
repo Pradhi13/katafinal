@@ -1,6 +1,7 @@
 package com.bnpp.kata.developmentbooks.controller;
 
 import com.bnpp.kata.developmentbooks.model.Books;
+import com.bnpp.kata.developmentbooks.model.OrderResponse;
 import com.bnpp.kata.developmentbooks.service.DevelopmentBooksService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class DevelopmentBooksController {
     }
 
     @PostMapping("/calculatePrice")
-    public double calculatePrice(@Valid @RequestBody Books books) {
+    public OrderResponse calculatePrice(@Valid @RequestBody Books books) {
         return developmentBooksService.calculateBookPrice(books.getBooks());
 
     }

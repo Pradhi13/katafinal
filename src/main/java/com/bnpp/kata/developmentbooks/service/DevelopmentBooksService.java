@@ -2,11 +2,14 @@ package com.bnpp.kata.developmentbooks.service;
 
 import com.bnpp.kata.developmentbooks.constants.BookType;
 import com.bnpp.kata.developmentbooks.model.BookItems;
+import com.bnpp.kata.developmentbooks.model.GroupDetails;
+import com.bnpp.kata.developmentbooks.model.OrderResponse;
+import com.bnpp.kata.developmentbooks.model.PriceResult;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import org.springframework.stereotype.Service;
-import java.util.Arrays;
-import java.util.List;
+
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -15,35 +18,71 @@ import static com.bnpp.kata.developmentbooks.constants.Constants.*;
 @Service
 public class DevelopmentBooksService {
 
-    public double calculateBookPrice(@NotEmpty(message = "Book list cannot be empty")
-                                     List<@Valid BookItems> bookItemsList) {
-        int[] quantities = bookItemsList.stream().mapToInt(BookItems::getQuantity).toArray();
-        return findBestPrice(quantities);
+    public OrderResponse calculateBookPrice(@NotEmpty(message = "Book list cannot be empty")
+                                            List<@Valid BookItems> bookItemsList) {
+        int[] quantities = bookItemsList.stream()
+                .mapToInt(BookItems::getQuantity)
+                .toArray();
+
+        String[] titles = bookItemsList.stream()
+                .map(BookItems::getTitle)
+                .toArray(String[]::new);
+
+        PriceResult result = findBestPrice(quantities, titles);
+
+        int totalBooks = Arrays.stream(quantities).sum();
+
+        double totalPrice = totalBooks * BASE_PRICE;
+
+        return new OrderResponse(
+                result.getGroups(),
+                totalPrice,
+                result.getPrice()
+        );
     }
-    private double findBestPrice(int[] quantities) {
+
+    private PriceResult findBestPrice(int[] quantities, String[] titles) {
 
         if (Arrays.stream(quantities).allMatch(quantityValue -> quantityValue == ZERO_INT)) {
-            return ZERO_DOUBLE;
+            return new PriceResult(ZERO_DOUBLE, new ArrayList<>());
+        }
 
-        }
         return IntStream.rangeClosed(ONE, quantities.length)
-                .mapToDouble(size -> calculateGroupPrice(size, quantities))
-                .filter(price -> price > ZERO_INT)
-                .min()
-                .orElse(Double.MAX_VALUE);
+                .mapToObj(size -> calculateGroupPrice(size, quantities, titles))
+                .filter(Objects::nonNull)
+                .min(Comparator.comparingDouble(PriceResult::getPrice))
+                .orElse(new PriceResult(Double.MAX_VALUE, new ArrayList<>()));
     }
-    private double calculateGroupPrice(int size, int[] quantities) {
+
+    private PriceResult calculateGroupPrice(int size, int[] quantities, String[] titles) {
+
         int[] next = Arrays.copyOf(quantities, quantities.length);
-        int count = (int) java.util.stream.IntStream.range(ZERO_INT, next.length)
-                .filter(i -> next[i] > ZERO_INT)
+
+        List<Integer> selectedIndices = IntStream.range(ZERO_INT, next.length)
+                .filter(index -> next[index] > ZERO_INT)
                 .limit(size)
-                .peek(i -> next[i]--)
-                .count();
-        if (count != size) {
-            return ZERO_DOUBLE;
+                .boxed()
+                .toList();
+        if (selectedIndices.size() != size) {
+            return null;
         }
-        double price = size * BASE_PRICE * (1 - DISCOUNT.get(size));
-        return price + findBestPrice(next);
+        selectedIndices.forEach(index -> next[index]--);
+
+        List<String> groupBooks = selectedIndices.stream().map(index -> titles[index]).toList();
+
+        double groupPrice = size * BASE_PRICE * (ONE - DISCOUNT.get(size));
+
+        PriceResult result = findBestPrice(next, titles);
+
+        double total = groupPrice + result.getPrice();
+
+        List<GroupDetails> groups = new ArrayList<>();
+
+        groups.add(new GroupDetails(groupBooks, size, DISCOUNT.get(size) * 100, groupPrice));
+
+        groups.addAll(result.getGroups());
+
+        return new PriceResult(total, groups);
     }
 
     public List<String> getListOfBooks() {

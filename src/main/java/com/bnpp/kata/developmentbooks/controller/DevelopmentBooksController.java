@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/books")
 @RequiredArgsConstructor
-public class DevelopmentBooksController {
+public class DevelopmentBooksController implements CalculatePriceApi {
 
     private final DevelopmentBooksService developmentBooksService;
 
@@ -22,9 +22,7 @@ public class DevelopmentBooksController {
         return ResponseEntity.ok(developmentBooksService.getListOfBooks());
     }
 
-    @PostMapping("/calculatePrice")
-    public OrderResponse calculatePrice(@Valid @RequestBody Books books) {
-        return developmentBooksService.calculateBookPrice(books.getBooks());
-
+    public ResponseEntity<OrderResponse> calculateBookPriceApi(@Valid @RequestBody Books books) {
+        return ResponseEntity.ok(developmentBooksService.calculateBookPrice(books.getBooks()));
     }
 }

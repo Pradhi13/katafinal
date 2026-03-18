@@ -16,6 +16,7 @@ public class Constants {
             5, 0.25
     );
     public static final int ONE = 1;
+    public static final int HUNDRED=100;
 
 
 }

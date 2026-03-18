@@ -26,25 +26,19 @@ public class DevelopmentBooksService {
                 item.getQuantity() <= ZERO_INT || item.getTitle().trim().isEmpty())) {
             throw new InvalidBookException("Invalid book items: check quantity/title");
         }
-        int[] quantities = bookItemsList.stream()
-                .mapToInt(BookItems::getQuantity)
-                .toArray();
+        int[] quantities = getBookQuantities(bookItemsList);
 
-        String[] titles = bookItemsList.stream()
-                .map(BookItems::getTitle)
-                .toArray(String[]::new);
-
-        PriceResult result = findBestPrice(quantities, titles);
+        PriceResult result = findBestPrice(quantities, getBookTitles(bookItemsList));
 
         int totalBooks = Arrays.stream(quantities).sum();
 
         double totalPrice = totalBooks * BASE_PRICE;
 
-        return new OrderResponse(
-                result.getGroups(),
-                totalPrice,
-                result.getPrice()
-        );
+        return OrderResponse.builder()
+                .groups(result.getGroups())
+                .totalPrice(totalPrice)
+                .discountedPrice(result.getPrice())
+                .build();
     }
 
     private PriceResult findBestPrice(int[] quantities, String[] titles) {
@@ -53,45 +47,74 @@ public class DevelopmentBooksService {
             return new PriceResult(ZERO_DOUBLE, new ArrayList<>());
         }
 
-        return IntStream.rangeClosed(ONE, quantities.length)
+        return IntStream.rangeClosed(1, quantities.length)
                 .mapToObj(size -> calculateGroupPrice(size, quantities, titles))
                 .filter(Objects::nonNull)
                 .min(Comparator.comparingDouble(PriceResult::getPrice))
-                .orElse(new PriceResult(Double.MAX_VALUE, new ArrayList<>()));
+                .map(best -> PriceResult.builder()
+                        .price(best.getPrice())
+                        .groups(best.getGroups())
+                        .build())
+                .orElse(PriceResult.builder()
+                        .price(Double.MAX_VALUE)
+                        .groups(new ArrayList<>())
+                        .build());
     }
 
     private PriceResult calculateGroupPrice(int size, int[] quantities, String[] titles) {
 
-        int[] next = Arrays.copyOf(quantities, quantities.length);
+        int[] tmpArray = Arrays.copyOf(quantities, quantities.length);
 
-        List<Integer> selectedIndices = IntStream.range(ZERO_INT, next.length)
-                .filter(index -> next[index] > ZERO_INT)
+        List<Integer> selectedIndices = IntStream.range(ZERO_INT, tmpArray.length)
+                .filter(index -> tmpArray[index] > ZERO_INT)
                 .limit(size)
                 .boxed()
                 .toList();
         if (selectedIndices.size() != size) {
             return null;
         }
-        selectedIndices.forEach(index -> next[index]--);
+        selectedIndices.forEach(index -> tmpArray[index]--);
 
         List<String> groupBooks = selectedIndices.stream().map(index -> titles[index]).toList();
 
         double groupPrice = size * BASE_PRICE * (ONE - DISCOUNT.get(size));
 
-        PriceResult result = findBestPrice(next, titles);
+        PriceResult result = findBestPrice(tmpArray, titles);
 
         double total = groupPrice + result.getPrice();
 
-        List<GroupDetails> groups = new ArrayList<>();
+        GroupDetails group = GroupDetails.builder()
+                .books(groupBooks)
+                .groupSize(size)
+                .discountPercentage(DISCOUNT.get(size) * HUNDRED)
+                .afterdiscountPrice(groupPrice)
+                .build();
 
-        groups.add(new GroupDetails(groupBooks, size, DISCOUNT.get(size) * 100, groupPrice));
+        PriceResult recursive = findBestPrice(tmpArray, titles);
 
-        groups.addAll(result.getGroups());
-
-        return new PriceResult(total, groups);
+        return PriceResult.builder()
+                .price(groupPrice + recursive.getPrice())
+                .groups(concatenate(group, recursive.getGroups()))
+                .build();
     }
 
     public List<String> getListOfBooks() {
         return Arrays.stream(BookType.values()).map(BookType::getTitle).collect(Collectors.toList());
+    }
+
+    private String[] getBookTitles(List<BookItems> bookItemsList) {
+        return bookItemsList.stream()
+                .map(BookItems::getTitle)
+                .toArray(String[]::new);
+    }
+    private int[] getBookQuantities(List<BookItems> bookItemsList) {
+        return bookItemsList.stream()
+                .mapToInt(BookItems::getQuantity)
+                .toArray();
+    }
+    private List<GroupDetails> concatenate(GroupDetails newGroup, List<GroupDetails> existing) {
+        List<GroupDetails> all = new ArrayList<>(existing);
+        all.add(ZERO_INT, newGroup);
+        return all;
     }
 }

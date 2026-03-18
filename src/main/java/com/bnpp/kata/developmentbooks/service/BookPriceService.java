@@ -13,9 +13,10 @@ import static com.bnpp.kata.developmentbooks.constants.Constants.*;
 @Service
 public class BookPriceService {
 
+    double finalPrice=ZERO_DOUBLE;
     public double calculateBookPrice(List<BookItems> bookItemsList){
         if(bookItemsList==null||bookItemsList.isEmpty()){
-            return ZERO_DOUBLE;
+            return finalPrice;
         }
         long uniqueBooks = bookItemsList.stream()
                 .map(BookItems::getTitle)
@@ -25,8 +26,11 @@ public class BookPriceService {
                 .mapToDouble(BookItems::getQuantity)
                 .sum();
         if(totalBooks<=0)
-            return ZERO_DOUBLE;
-        return uniqueBooks * totalBooks * BASE_PRICE;
+            return finalPrice;
+        if(uniqueBooks==bookItemsList.size()) {
+            finalPrice = totalBooks * BASE_PRICE;
+        }
+        return finalPrice;
     }
 
     public List<String> getListOfBooks() {

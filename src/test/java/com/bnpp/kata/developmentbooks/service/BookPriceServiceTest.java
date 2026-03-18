@@ -50,9 +50,19 @@ public class BookPriceServiceTest {
 
     @Test
     @DisplayName("should return total price for two different books without discount")
-    public void calculateTwoBooksPrice(){
+    public void calculateTwoDifferentBooksPrice(){
         bookItemsList = List.of(new BookItems("Clean code",1),new BookItems("The Clean Coder", 1));
         double price = bookPriceService.calculateBookPrice(bookItemsList);
         assertEquals(100.0,price);
+    }
+
+    @Test
+    @DisplayName("should return total price for three different books without discount")
+    public void calculateThreeDifferentBooksPrice(){
+        bookItemsList = List.of(new BookItems("Clean code",1),
+                new BookItems("The Clean Coder",1),
+                new BookItems("Clean Architecture",1));
+        double price = bookPriceService.calculateBookPrice(bookItemsList);
+        assertEquals(150.0,price);
     }
 }

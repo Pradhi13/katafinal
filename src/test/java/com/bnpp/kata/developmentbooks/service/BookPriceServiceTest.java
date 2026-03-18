@@ -5,6 +5,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.bnpp.kata.developmentbooks.constants.Constants.ZERO_DOUBLE;
 import static com.bnpp.kata.developmentbooks.constants.Constants.ZERO_INT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,37 +16,35 @@ public class BookPriceServiceTest {
 
     private BookPriceService bookPriceService;
     private BookItems bookItems;
+    private List<BookItems> bookItemsList;
 
     @BeforeEach
     public void setup(){
         bookPriceService=new BookPriceService();
-        bookItems=new BookItems();
+        bookItemsList=new ArrayList<>();
     }
 
     @Test
     @DisplayName("should return base price for a single book without discount")
     public void calculateSingleBookPrice(){
-        bookItems.setTitle("Clean Code");
-        bookItems.setQuantity(2);
-        double price = bookPriceService.calculateBookPrice(bookItems);
+        bookItemsList = List.of(new BookItems("Clean code",2));
+        double price = bookPriceService.calculateBookPrice(bookItemsList);
         assertEquals(100.0,price);
     }
 
     @Test
     @DisplayName("should return zero when book title is empty")
     public void calculateSingleBookWithEmptyData(){
-        bookItems.setTitle("");
-        bookItems.setQuantity(2);
-        double price = bookPriceService.calculateBookPrice(bookItems);
+
+        double price = bookPriceService.calculateBookPrice(bookItemsList);
         assertEquals(ZERO_DOUBLE,price);
     }
 
     @Test
     @DisplayName("should return zero when quantity is zero")
     public void calculateSingleBookWithZeroQuantity(){
-        bookItems.setTitle("Clean Code");
-        bookItems.setQuantity(0);
-        double price = bookPriceService.calculateBookPrice(bookItems);
+        bookItemsList = List.of(new BookItems("Clean code",0));
+        double price = bookPriceService.calculateBookPrice(bookItemsList);
         assertEquals(ZERO_DOUBLE,price);
     }
 }

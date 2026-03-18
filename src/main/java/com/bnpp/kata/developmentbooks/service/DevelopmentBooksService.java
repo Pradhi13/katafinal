@@ -22,13 +22,15 @@ public class DevelopmentBooksService {
     public OrderResponse calculateBookPrice(@NotEmpty(message = "Book list cannot be empty")
                                             List<@Valid BookItems> bookItemsList) {
 
+        final Map<String, PriceResult> cache = new HashMap<>();
+
         if (bookItemsList.stream().anyMatch(item ->
                 item.getQuantity() <= ZERO_INT || item.getTitle().trim().isEmpty())) {
             throw new InvalidBookException("Invalid book items: check quantity/title");
         }
         int[] quantities = getBookQuantities(bookItemsList);
 
-        PriceResult result = findBestPrice(quantities, getBookTitles(bookItemsList));
+        PriceResult result = findBestPrice(quantities, getBookTitles(bookItemsList),cache);
 
         int totalBooks = Arrays.stream(quantities).sum();
 
@@ -41,14 +43,21 @@ public class DevelopmentBooksService {
                 .build();
     }
 
-    private PriceResult findBestPrice(int[] quantities, String[] titles) {
+    private PriceResult findBestPrice(int[] quantities, String[] titles, Map<String,PriceResult> cache) {
 
+        String key = Arrays.toString(quantities);
+
+        if (cache.containsKey(key)) {
+            return cache.get(key);
+        }
         if (Arrays.stream(quantities).allMatch(quantityValue -> quantityValue == ZERO_INT)) {
-            return new PriceResult(ZERO_DOUBLE, new ArrayList<>());
+            PriceResult result = PriceResult.builder().price(ZERO_DOUBLE).groups(new ArrayList<>()).build();
+            cache.put(key,result);
+            return result;
         }
 
-        return IntStream.rangeClosed(1, quantities.length)
-                .mapToObj(size -> calculateGroupPrice(size, quantities, titles))
+        PriceResult bestResult = IntStream.rangeClosed(1, quantities.length)
+                .mapToObj(size -> calculateGroupPrice(size, quantities, titles, cache))
                 .filter(Objects::nonNull)
                 .min(Comparator.comparingDouble(PriceResult::getPrice))
                 .map(best -> PriceResult.builder()
@@ -59,9 +68,11 @@ public class DevelopmentBooksService {
                         .price(Double.MAX_VALUE)
                         .groups(new ArrayList<>())
                         .build());
+        cache.put(key,bestResult);
+        return bestResult;
     }
 
-    private PriceResult calculateGroupPrice(int size, int[] quantities, String[] titles) {
+    private PriceResult calculateGroupPrice(int size, int[] quantities, String[] titles, Map<String,PriceResult> cache) {
 
         int[] tmpArray = Arrays.copyOf(quantities, quantities.length);
 
@@ -79,7 +90,7 @@ public class DevelopmentBooksService {
 
         double groupPrice = size * BASE_PRICE * (ONE - DISCOUNT.get(size));
 
-        PriceResult result = findBestPrice(tmpArray, titles);
+        PriceResult result = findBestPrice(tmpArray, titles, cache);
 
         double total = groupPrice + result.getPrice();
 
@@ -90,7 +101,7 @@ public class DevelopmentBooksService {
                 .afterdiscountPrice(groupPrice)
                 .build();
 
-        PriceResult recursive = findBestPrice(tmpArray, titles);
+        PriceResult recursive = findBestPrice(tmpArray, titles, cache);
 
         return PriceResult.builder()
                 .price(groupPrice + recursive.getPrice())

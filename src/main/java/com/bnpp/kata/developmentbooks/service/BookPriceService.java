@@ -2,10 +2,13 @@ package com.bnpp.kata.developmentbooks.service;
 
 import com.bnpp.kata.developmentbooks.constants.BookType;
 import com.bnpp.kata.developmentbooks.model.BookItems;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.bnpp.kata.developmentbooks.constants.Constants.*;
@@ -13,22 +16,22 @@ import static com.bnpp.kata.developmentbooks.constants.Constants.*;
 @Service
 public class BookPriceService {
 
-    public double calculateBookPrice(List<BookItems> bookItemsList){
-        if(bookItemsList==null||bookItemsList.isEmpty()){
+    public double calculateBookPrice(@NotEmpty(message = "Book list cannot be empty")
+                                     List<@Valid BookItems> bookItemsList){
+
+        Map<String,Long> titleCounts = bookItemsList.stream().collect(Collectors.groupingBy(BookItems::getTitle,Collectors.counting()));
+
+        long uniqueBooks = titleCounts.size();
+
+        double discountSetPrice = uniqueBooks * BASE_PRICE * (1-DISCOUNTS[(int) uniqueBooks]);
+
+        long totalQuantity = bookItemsList.stream()
+                .mapToLong(BookItems::getQuantity).sum();
+        double extraCopies = (totalQuantity-uniqueBooks)*BASE_PRICE;
+        if(totalQuantity<=0){
             return ZERO_DOUBLE;
         }
-        long uniqueBooks = bookItemsList.stream()
-                .map(BookItems::getTitle)
-                .collect(Collectors.toSet())
-                .size();
-        double totalBooks = bookItemsList.stream()
-                .mapToDouble(BookItems::getQuantity)
-                .sum();
-        if(totalBooks<=0)
-            return ZERO_DOUBLE;
-        double discount = DISCOUNTS[(int) Math.min(uniqueBooks, DISCOUNTS.length - 1)];
-        double unquieBookDiscountPrice=uniqueBooks * BASE_PRICE *(1-discount);
-        return (totalBooks-uniqueBooks) * BASE_PRICE + unquieBookDiscountPrice;
+        return discountSetPrice + extraCopies;
     }
 
     public List<String> getListOfBooks() {
